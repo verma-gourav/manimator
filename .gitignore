@@ -1,0 +1,22 @@
+# Backend dependencies
+backend/node_modules/
+
+# Backend build output
+backend/dist/
+
+# TypeScript build cache
+backend/tsconfig.tsbuildinfo
+
+# Local generated data
+generated/
+
+# Environment files
+.env
+.env.*
+
+# pnpm logs
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
