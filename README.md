@@ -1,3 +1,3 @@
 # Manimator
 
-Visualize maths concepts using animations.
+Visualize maths concepts with cool animations.

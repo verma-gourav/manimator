@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark: #040404;
+  --color-input: #222222;
+  --color-orange: #de4a2e;
+}
+
+body {
+  background-color: var(--color-dark);
+
+  background-image:
+    /* --- small grid --- */
+    linear-gradient(#ffffff0d 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    /* --- medium grid --- */
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+
+  background-size:
+    8px 8px,
+    8px 8px,
+    32px 32px,
+    32px 32px;
+}

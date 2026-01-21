@@ -1,22 +1,44 @@
-# Backend dependencies
+# Dependencies
 backend/node_modules/
+frontend/node_modules/
 
 # Backend build output
 backend/dist/
 
-# TypeScript build cache
-backend/tsconfig.tsbuildinfo
+# Next.js frontend build outputs
+frontend/.next/
+frontend/out/
 
 # Local generated data
 generated/
 
 # Environment files
 .env
+.env.local
 .env.*
+.env*
+!.env.example
 
-# pnpm logs
+# testing
+/frontend/coverage/
+/backend/coverage/
+
+# logs
+*.log
+npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
 
-# OS files
+
+# TypeScript build cache
+backend/tsconfig.tsbuildinfo
+*.tsbuildinfo
+next-env.d.ts
+
+# os / misc
 .DS_Store
 Thumbs.db
+*.pem
+
+# vercel
+.vercel
