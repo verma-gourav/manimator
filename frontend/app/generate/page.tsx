@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PromptBar } from "@/app/components/PromptBar";
 import { CodePanel } from "../components/CodePanel";
+import { VideoPanel } from "../components/VideoPanel";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -15,7 +16,8 @@ export default function Home() {
         setPrompt={setPrompt}
         onSubmit={handleSubmit}
       /> */}
-      <CodePanel />
+      {/* <CodePanel /> */}
+      <VideoPanel />
     </div>
   );
 }
