@@ -29,8 +29,7 @@ export const PromptBar = ({
       className="
         w-3/4 max-w-3xl mx-auto
         flex items-end gap-2 px-4 py-3
-        bg-input/50 backdrop-blur-md
-        rounded-3xl shadow-sm border border-white/10
+        bg-box/50 backdrop-blur-lg rounded-3xl shadow-sm border border-white/20
         max-sm:w-[80%] max-sm:rounded-xl smax-sm:px-3
       "
     >
@@ -45,6 +44,7 @@ export const PromptBar = ({
         "
         placeholder={placeholder}
         value={prompt}
+        spellCheck={false}
         onChange={(e) => setPrompt(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
