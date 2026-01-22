@@ -36,7 +36,7 @@ export default function GeneratePage() {
     setError(null);
 
     try {
-      const res = await axios.post(`${API_BASE}/genearte`, {
+      const res = await axios.post(`${API_BASE}/generate`, {
         prompt: draftPrompt,
       });
 
