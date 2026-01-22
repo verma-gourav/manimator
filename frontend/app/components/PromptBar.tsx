@@ -19,13 +19,24 @@ export const PromptBar = ({ prompt, setPrompt, onSubmit }: Props) => {
   }, [prompt]);
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-wrap items-end gap-2 px-2 py-2 bg-input  rounded-3xl shadow-sm">
+    <div
+      className="
+        w-3/4 max-w-3xl mx-auto
+        flex items-end gap-2 px-4 py-3
+        bg-input/50 backdrop-blur-md
+        rounded-3xl shadow-sm border border-white/10
+        max-sm:w-[80%] max-sm:rounded-xl smax-sm:px-3
+      "
+    >
       <textarea
         ref={textareaRef}
         rows={1}
-        className="flex-1 min-h-11 max-h-48 px-4 py-2 bg-transparent outline-none
-                   text-lg text-orange placeholder:text-orange/40
-                   resize-none overflow-hidden"
+        className="
+          flex-1 min-h-11 max-h-48 px-4 py-2
+          outline-none resize-none overflow-hidden
+          text-xl text-orange placeholder:text-orange/50
+          max-sm:text-base max-sm:px-3
+        "
         placeholder="Create math animations..."
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
@@ -39,10 +50,14 @@ export const PromptBar = ({ prompt, setPrompt, onSubmit }: Props) => {
 
       <button
         onClick={onSubmit}
-        className="h-10 w-12 flex items-center justify-center rounded-full bg-orange transition
-                   hover:bg-orange/90 active:scale-95"
+        className="
+          h-10 w-12 flex items-center justify-center
+          rounded-full bg-orange transition 
+          hover:bg-orange/90 active:scale-95
+          max-sm:h-9 max-sm:w-10
+        "
       >
-        <AiOutlineSend size={20} />
+        <AiOutlineSend size={18} />
       </button>
     </div>
   );
