@@ -5,9 +5,15 @@ interface Props {
   prompt: string;
   setPrompt: (v: string) => void;
   onSubmit: () => void;
+  placeholder?: string;
 }
 
-export const PromptBar = ({ prompt, setPrompt, onSubmit }: Props) => {
+export const PromptBar = ({
+  prompt,
+  setPrompt,
+  onSubmit,
+  placeholder = "Create math animations...",
+}: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* --- auto resize text-area height --- */
@@ -37,7 +43,7 @@ export const PromptBar = ({ prompt, setPrompt, onSubmit }: Props) => {
           text-xl text-orange placeholder:text-orange/50
           max-sm:text-base max-sm:px-3
         "
-        placeholder="Create math animations..."
+        placeholder={placeholder}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onKeyDown={(e) => {
