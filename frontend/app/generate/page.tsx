@@ -6,6 +6,7 @@ import { PromptBar } from "@/app/components/PromptBar";
 import { TopBar } from "@/app/components/TopBar";
 import { CodePanel } from "@/app/components/CodePanel";
 import { VideoPanel } from "@/app/components/VideoPanel";
+import { ProgressOverlay } from "@/app/components/ProgressOverlay";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -138,6 +139,15 @@ export default function GeneratePage() {
             <CodePanel />
             <VideoPanel />
           </div>
+
+          {/* Progress Overlay */}
+          {jobState && jobState.status !== "completed" && (
+            <ProgressOverlay
+              status={jobState.status}
+              stage={jobState.stage}
+              progress={jobState.progress}
+            />
+          )}
 
           <div className="mt-20">
             <PromptBar
