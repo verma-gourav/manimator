@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/app/components/logo/Logo";
 import { PromptBar } from "@/app/components/PromptBar";
 import { TopBar } from "@/app/components/TopBar";
@@ -10,6 +10,14 @@ import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
+/* --- Types --- */
+type JobState = {
+  status: "queued" | "processing" | "completed" | "failed";
+  progress: number;
+  stage?: string;
+};
+
+/* --- Page --- */
 export default function GeneratePage() {
   const [mode, setMode] = useState<"idle" | "result">("idle");
 
@@ -19,6 +27,8 @@ export default function GeneratePage() {
   const [submittedPrompt, setSubmittedPrompt] = useState("");
 
   const [jobId, setJobId] = useState<string | null>(null);
+  const [jobState, setJobState] = useState<JobState | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +39,7 @@ export default function GeneratePage() {
     "Show Fourier series approximation",
   ];
 
+  /* --- submit prompt --- */
   const handleSubmit = async () => {
     if (!draftPrompt.trim() || isSubmitting) return;
 
@@ -45,6 +56,7 @@ export default function GeneratePage() {
       setSubmittedPrompt(draftPrompt);
       setDraftPrompt(""); // clear input after submit
       setJobId(jobId);
+      setJobState(null);
       setMode("result");
     } catch (err) {
       console.error(err);
@@ -60,6 +72,28 @@ export default function GeneratePage() {
     setMode("result");
   };
 
+  /* --- ws: job progress --- */
+  useEffect(() => {
+    if (!jobId) return;
+
+    const wsUrl = `${API_BASE!.replace("http", "ws")}/?jobId=${jobId}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setJobState(data);
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocker error", err);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [jobId]);
+
+  /* --- render --- */
   return (
     <main className="mx-20 my-4">
       {/* --- IDLE VIEW --- */}
@@ -72,6 +106,8 @@ export default function GeneratePage() {
             setPrompt={setDraftPrompt}
             onSubmit={handleSubmit}
           />
+
+          {error && <div className="mt-4 text-red-400 text-sm">{error}</div>}
 
           <div className="flex flex-wrap gap-2 justify-center mt-10">
             {EXAMPLE_PROMPTS.map((example) => (
