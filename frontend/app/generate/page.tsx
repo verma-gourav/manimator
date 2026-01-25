@@ -10,6 +10,7 @@ import { ProgressOverlay } from "@/app/components/ProgressOverlay";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL;
 
 /* --- Types --- */
 type JobState = {
@@ -33,6 +34,9 @@ export default function GeneratePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [code, setCode] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
   const EXAMPLE_PROMPTS = [
     "Create a sine wave animation",
     "Visualize Pythagoras theorem",
@@ -41,24 +45,33 @@ export default function GeneratePage() {
   ];
 
   /* --- submit prompt --- */
-  const handleSubmit = async () => {
-    if (!draftPrompt.trim() || isSubmitting) return;
+  const handleSubmit = async (promptOverride?: string) => {
+    const promptToSubmit = promptOverride ?? draftPrompt;
+    if (!promptToSubmit.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
       const res = await axios.post(`${API_BASE}/generate`, {
-        prompt: draftPrompt,
+        prompt: promptToSubmit,
       });
 
       const { jobId } = res.data;
 
-      setSubmittedPrompt(draftPrompt);
+      setSubmittedPrompt(promptToSubmit);
       setDraftPrompt(""); // clear input after submit
       setJobId(jobId);
-      setJobState(null);
+      setJobState({
+        status: "queued",
+        progress: 0,
+        stage: "Queued",
+      });
       setMode("result");
+
+      // reset
+      setCode(null);
+      setVideoUrl(null);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again");
@@ -67,18 +80,52 @@ export default function GeneratePage() {
     }
   };
 
-  const handleExampleClick = (example: string) => {
-    setSubmittedPrompt(example);
-    setDraftPrompt(""); // empty result PromptBar
-    setMode("result");
+  /* --- fetch code --- */
+  const fetchCode = async (jobId: string) => {
+    try {
+      const res = await axios.get(`${API_BASE}/job/${jobId}/code`, {
+        responseType: "text",
+      });
+      setCode(res.data);
+    } catch (err) {
+      console.error("Failed to fetch code", err);
+    }
+  };
+
+  /* --- rerender edited code --- */
+  const handleRerender = async () => {
+    if (!jobId || !code) return;
+
+    try {
+      setJobState({
+        status: "processing",
+        progress: 60,
+        stage: "Rendering edited code",
+      });
+
+      await axios.post(`${API_BASE}/job/${jobId}/rerender`, {
+        code,
+      });
+    } catch (err) {
+      console.error(err);
+      setJobState({
+        status: "failed",
+        progress: jobState?.progress ?? 0,
+        stage: "Failed",
+      });
+      setError("Failed to rerender code");
+    }
   };
 
   /* --- ws: job progress --- */
   useEffect(() => {
     if (!jobId) return;
 
-    const wsUrl = `${API_BASE!.replace("http", "ws")}/?jobId=${jobId}`;
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(`${WS_BASE}/?jobId=${jobId}`);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -89,10 +136,22 @@ export default function GeneratePage() {
       console.error("WebSocker error", err);
     };
 
+    ws.onclose = () => {
+      console.log("WebSocket closed");
+    };
+
     return () => {
       ws.close();
     };
   }, [jobId]);
+
+  /* --- code & video --- */
+  useEffect(() => {
+    if (!jobId || jobState?.status !== "completed") return;
+
+    fetchCode(jobId);
+    setVideoUrl(`${API_BASE}/job/${jobId}/video?ts=${Date.now()}`);
+  }, [jobState?.status, jobId]);
 
   /* --- render --- */
   return (
@@ -115,7 +174,7 @@ export default function GeneratePage() {
               <button
                 key={example}
                 onClick={() => {
-                  handleExampleClick(example);
+                  handleSubmit(example);
                 }}
                 className="rounded-full border bg-black/20 border-white/20
                  px-4 py-2 text-sm text-white/80 cursor-pointer
@@ -136,8 +195,12 @@ export default function GeneratePage() {
           </div>
 
           <div className="mt-12 h-[60vh] flex justify-between">
-            <CodePanel />
-            <VideoPanel />
+            <CodePanel
+              code={code}
+              setCode={setCode}
+              onRerender={handleRerender}
+            />
+            <VideoPanel videoUrl={videoUrl} />
           </div>
 
           {/* Progress Overlay */}
