@@ -55,7 +55,7 @@ export const PromptBar = ({
       />
 
       <button
-        onClick={onSubmit}
+        onClick={() => onSubmit()}
         className="
           h-10 w-12 flex items-center justify-center
           rounded-full bg-orange transition 
