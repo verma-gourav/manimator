@@ -55,7 +55,7 @@ router.get("/:jobId/code", async (req, res) => {
       return res.status(404).json({ error: "Code not found" });
     }
 
-    res.download(job.codePath);
+    res.type("text/plain").send(fs.readFileSync(job.codePath, "utf-8"));
   } catch {
     res.status(404).json({ error: "Job not found" });
   }
@@ -70,6 +70,19 @@ router.get("/:jobId/video", async (req, res) => {
       return res.status(404).json({ error: "Video not found" });
     }
 
+    res.sendFile(job.videoPath);
+  } catch {
+    res.status(404).json({ error: "Job not found" });
+  }
+});
+
+router.get("/:jobId/video/download", async (req, res) => {
+  try {
+    const job = await getStoredJob(req.params.jobId);
+
+    if (!job.videoPath || !fs.existsSync(job.videoPath)) {
+      return res.status(404).json({ error: "Video not found" });
+    }
     res.download(job.videoPath);
   } catch {
     res.status(404).json({ error: "Job not found" });
