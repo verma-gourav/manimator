@@ -1,9 +1,17 @@
-export const CodePanel = () => {
+export const CodePanel = ({
+  code,
+  setCode,
+  onRerender,
+}: {
+  code: string | null;
+  setCode: (code: string) => void;
+  onRerender: () => void;
+}) => {
   return (
     <div
       className="
         relative w-[48%] h-full rounded-2xl p-5
-        border border-white/20 bg-box/50
+        border border-white/20 bg-box/50 
       "
     >
       {/* Re-render button */}
@@ -15,25 +23,23 @@ export const CodePanel = () => {
           hover:bg-white/90 cursor-pointer
           active:scale-95 transition
         "
+        onClick={onRerender}
       >
         RE-RENDER
       </button>
 
       {/* Inner code area */}
-      <div
+      <textarea
+        value={code ?? ""}
+        placeholder="Waiting for generated code..."
+        onChange={(e) => setCode(e.target.value)}
         className="
           mt-10 h-[calc(100%-2.5rem)] rounded-xl
-          border border-white/10
-          bg-black/60 p-4 font-mono text-sm text-white/70
-          overflow-auto whitespace-pre
+          border border-white/10 w-full
+          bg-black/60 p-4 font-mono text-sm text-white/60
+           whitespace-pre overflow-auto scrollbar-dark resize-none
         "
-      >
-        Editable
-        {"\n"}
-        Manim
-        {"\n"}
-        Code
-      </div>
+      />
     </div>
   );
 };
