@@ -9,28 +9,6 @@ import { saveCodeToFile } from "../../utils/saveCode.js";
 import { runManim } from "../../services/manim/manim.js";
 import path from "node:path";
 
-/* --- llm call with retry --- */
-const generateWithRetry = async (
-  prompt: string,
-  maxRetries = 3,
-): Promise<string> => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return generateManimCode(prompt);
-    } catch (err: any) {
-      if (err?.status === 503 && i < maxRetries - 1) {
-        console.warn(
-          `[worker] LLM API overloaded, retrying in 5s...(attempt ${i + 1})`,
-        );
-        await new Promise((r) => setTimeout(r, 5000));
-      } else {
-        throw err;
-      }
-    }
-  }
-  throw new Error("Failed to generate code after retries");
-};
-
 /* --- publish helper --- */
 const publish = async (jobId: string, payload: any) => {
   await pubClient.publish(`job-progress:${jobId}`, JSON.stringify(payload));
@@ -56,30 +34,63 @@ const worker = new Worker(
     fs.mkdirSync(jobDir, { recursive: true });
     await report(jobId, 10, "processing", "Initializing job");
 
-    const manimCode = await generateWithRetry(prompt);
-    await report(jobId, 40, "processing", "Generating Code");
+    let manimCode: string;
+    try {
+      await report(jobId, 20, "processing", "Generating code");
+      manimCode = await generateManimCode(prompt);
+      await report(jobId, 40, "processing", "Code generated");
+    } catch (err: any) {
+      await updateStoredJob(jobId, {
+        status: "failed",
+        error: err.message,
+        progress: 0,
+      });
+
+      await publish(jobId, {
+        status: "failed",
+        error: err.message,
+        progress: 0,
+      });
+
+      throw err; // fail the job
+    }
 
     const { fileName, sceneName } = saveCodeToFile(manimCode, jobDir);
     await report(jobId, 60, "processing", "Saving Code");
 
-    const videoPath = await runManim(fileName, sceneName, jobDir);
-    await report(jobId, 90, "processing", "Rendering video");
+    try {
+      const videoPath = await runManim(fileName, sceneName, jobDir);
+      await report(jobId, 90, "processing", "Rendering video");
 
-    await updateStoredJob(jobId, {
-      progress: 100,
-      status: "completed",
-      stage: "Finished",
-      codePath: path.join(jobDir, "scenes", fileName),
-      videoPath,
-    });
+      await updateStoredJob(jobId, {
+        progress: 100,
+        status: "completed",
+        stage: "Finished",
+        codePath: path.join(jobDir, "scenes", fileName),
+        videoPath,
+      });
 
-    await publish(jobId, {
-      progress: 100,
-      status: "completed",
-      stage: "Finished",
-    });
+      await publish(jobId, {
+        progress: 100,
+        status: "completed",
+        stage: "Finished",
+      });
 
-    return true;
+      return true;
+    } catch (err: any) {
+      await updateStoredJob(jobId, {
+        status: "failed",
+        error: err.message,
+        progress: 90,
+      });
+      await publish(jobId, {
+        status: "failed",
+        error: err.message,
+        progress: 90,
+      });
+
+      throw err;
+    }
   },
   {
     connection: renderQueue.opts.connection,
