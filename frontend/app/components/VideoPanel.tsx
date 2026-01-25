@@ -1,4 +1,4 @@
-export const VideoPanel = () => {
+export const VideoPanel = ({ videoUrl }: { videoUrl: string | null }) => {
   return (
     <div
       className="
@@ -7,17 +7,20 @@ export const VideoPanel = () => {
       "
     >
       {/* Download button */}
-      <button
-        className="
+      <a
+        href={videoUrl ? `${videoUrl}/download` : undefined}
+        download
+        className={`
           absolute top-4 right-4 px-3 py-1.5
           text-sm tracking-wide rounded-md
-        text-black bg-white backdrop-blur
+          text-black bg-white backdrop-blur
           hover:bg-white/90 cursor-pointer
           active:scale-95 transition
-        "
+          ${!videoUrl ? "pointer-events-none opacity-50" : ""}
+        `}
       >
         DOWNLOAD
-      </button>
+      </a>
 
       {/* Video area */}
       <div
@@ -28,7 +31,15 @@ export const VideoPanel = () => {
           overflow-auto whitespace-pre
         "
       >
-        Video Area
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            controls
+            className="max-h-full max-w-full rounded-lg"
+          />
+        ) : (
+          <span className="text-white/60">Waiting for render...</span>
+        )}
       </div>
     </div>
   );
