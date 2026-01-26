@@ -25,11 +25,36 @@ const report = async (
   await publish(jobId, { progress, status, stage });
 };
 
+/* --- retry report --- */
+const reportRetry = async (
+  jobId: string,
+  attempt: number,
+  maxAttempts: number,
+  reason: string,
+) => {
+  const stage = `Retrying (${attempt + 1}/${maxAttempts}) - ${reason}`;
+
+  await updateStoredJob(jobId, {
+    status: "processing",
+    stage,
+    progress: 5,
+  });
+
+  await publish(jobId, {
+    status: "processing",
+    stage,
+    progress: 5,
+  });
+};
+
 /* --- worker --- */
 const worker = new Worker(
   renderQueue.name,
   async (job: Job<RenderJob>) => {
     const { jobId, prompt, jobDir } = job.data;
+
+    const attempt = job.attemptsMade;
+    const maxAttempts = job.opts.attempts ?? 1;
 
     fs.mkdirSync(jobDir, { recursive: true });
     await report(jobId, 10, "processing", "Initializing job");
@@ -40,27 +65,24 @@ const worker = new Worker(
       manimCode = await generateManimCode(prompt);
       await report(jobId, 40, "processing", "Code generated");
     } catch (err: any) {
-      await updateStoredJob(jobId, {
-        status: "failed",
-        error: err.message,
-        progress: 0,
-      });
-
-      await publish(jobId, {
-        status: "failed",
-        error: err.message,
-        progress: 0,
-      });
+      if (attempt < maxAttempts - 1) {
+        await reportRetry(
+          jobId,
+          attempt,
+          maxAttempts,
+          err.message || "Code generation failed",
+        );
+      }
 
       throw err; // fail the job
     }
 
-    const { fileName, sceneName } = saveCodeToFile(manimCode, jobDir);
     await report(jobId, 60, "processing", "Saving Code");
+    const { fileName, sceneName } = saveCodeToFile(manimCode, jobDir);
 
     try {
-      const videoPath = await runManim(fileName, sceneName, jobDir);
       await report(jobId, 90, "processing", "Rendering video");
+      const videoPath = await runManim(fileName, sceneName, jobDir);
 
       await updateStoredJob(jobId, {
         progress: 100,
@@ -78,17 +100,14 @@ const worker = new Worker(
 
       return true;
     } catch (err: any) {
-      await updateStoredJob(jobId, {
-        status: "failed",
-        error: err.message,
-        progress: 90,
-      });
-      await publish(jobId, {
-        status: "failed",
-        error: err.message,
-        progress: 90,
-      });
-
+      if (attempt < maxAttempts - 1) {
+        await reportRetry(
+          jobId,
+          attempt,
+          maxAttempts,
+          err.message || "Rendering failed",
+        );
+      }
       throw err;
     }
   },
@@ -102,6 +121,33 @@ worker.on("completed", (job) => {
   console.log(`[worker] Job ${job.id} completed successfully`);
 });
 
-worker.on("failed", (job, err) => {
+worker.on("failed", async (job, err) => {
+  if (!job) return;
+
+  const attempts = job.opts.attempts ?? 1;
+  const attemptsMade = job.attemptsMade;
+
+  // marks failed if retries are exhausted
+  if (attemptsMade < attempts) {
+    return;
+  }
+
+  await updateStoredJob(job.data.jobId, {
+    status: "failed",
+    progress: 100,
+    stage: "Failed",
+    error: err.message,
+  });
+
+  await pubClient.publish(
+    `job-progress:${job.data.jobId}`,
+    JSON.stringify({
+      status: "failed",
+      progress: 100,
+      stage: "Failed",
+      error: err.message,
+    }),
+  );
+
   console.error(`[worker] Job ${job?.id} failed: ${err.message}`);
 });
