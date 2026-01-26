@@ -35,8 +35,8 @@ export const CodePanel = ({
         onChange={(e) => setCode(e.target.value)}
         className="
           mt-10 h-[calc(100%-2.5rem)] rounded-xl
-          border border-white/10 w-full
-          bg-black/60 p-4 font-mono text-sm text-white/60
+          border border-white/10 w-full outline-none
+          bg-black/60 p-4 font-mono text-sm text-white/70
            whitespace-pre overflow-auto scrollbar-dark resize-none
         "
       />
