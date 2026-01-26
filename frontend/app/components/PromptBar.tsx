@@ -60,7 +60,7 @@ export const PromptBar = ({
           h-10 w-12 flex items-center justify-center
           rounded-full bg-orange transition 
           hover:bg-orange/90 active:scale-95
-          max-sm:h-9 max-sm:w-10
+          max-sm:h-9 max-sm:w-10 cursor-pointer
         "
       >
         <AiOutlineSend size={18} />
