@@ -8,6 +8,8 @@ import fs from "fs";
 import { saveCodeToFile } from "../../utils/saveCode.js";
 import { runManim } from "../../services/manim/manim.js";
 import path from "node:path";
+import { uploadFilesToS3 } from "../../services/s3/upload.js";
+import { s3CleanupQueue } from "../../services/s3/s3Cleanup.js";
 
 /* --- publish helper --- */
 const publish = async (jobId: string, payload: any) => {
@@ -82,14 +84,40 @@ const worker = new Worker(
 
     try {
       await report(jobId, 90, "processing", "Rendering video");
-      const videoPath = await runManim(fileName, sceneName, jobDir);
+      const localVideoPath = await runManim(fileName, sceneName, jobDir);
+
+      const localCodePath = path.join(jobDir, "scenes", fileName);
+
+      const codeUrl = await uploadFilesToS3(
+        localCodePath,
+        `jobs/${jobId}/code.py`,
+        "text/x-python",
+        3600,
+      );
+      const videoUrl = await uploadFilesToS3(
+        localVideoPath,
+        `jobs/${jobId}/video.mp4`,
+        "video/mp4",
+        3600,
+      );
+
+      await s3CleanupQueue.add(
+        `cleanup-${jobId}`,
+        {
+          keys: [`jobs/${jobId}/code.py`, `jobs/${jobId}/video.mp4`],
+        },
+        {
+          delay: 24 * 60 * 60 * 1000, // 24hr
+          attempts: 3,
+        },
+      );
 
       await updateStoredJob(jobId, {
         progress: 100,
         status: "completed",
         stage: "Finished",
-        codePath: path.join(jobDir, "scenes", fileName),
-        videoPath,
+        codePath: codeUrl,
+        videoPath: videoUrl,
       });
 
       await publish(jobId, {
@@ -97,6 +125,9 @@ const worker = new Worker(
         status: "completed",
         stage: "Finished",
       });
+
+      // local clean up after S3 upload
+      fs.rmSync(jobDir, { recursive: true, force: true });
 
       return true;
     } catch (err: any) {

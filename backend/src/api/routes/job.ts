@@ -4,6 +4,9 @@ import fs from "fs";
 import { pubClient } from "../../jobs/store/pubsub.js";
 import { runManim } from "../../services/manim/manim.js";
 import path from "path";
+import { uploadFilesToS3 } from "../../services/s3/upload.js";
+import { saveCodeToFile } from "../../utils/saveCode.js";
+import { validateManimCode } from "../../utils/validate.js";
 
 const router = Router();
 
@@ -11,6 +14,8 @@ const router = Router();
 router.get("/:jobId", async (req, res) => {
   try {
     const job = await getStoredJob(req.params.jobId);
+
+    if (!job) return res.status(404).json({ error: "Job not found" });
 
     res.json({
       jobId: job.jobId,
@@ -21,7 +26,7 @@ router.get("/:jobId", async (req, res) => {
       updatedAt: job.updatedAt,
     });
   } catch {
-    res.status(404).json({ error: "Job not found" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -29,6 +34,8 @@ router.get("/:jobId", async (req, res) => {
 router.get("/:jobId/result", async (req, res) => {
   try {
     const job = await getStoredJob(req.params.jobId);
+
+    if (!job) return res.status(404).json({ error: "Job not found" });
 
     if (job.status !== "completed") {
       return res.status(400).json({
@@ -45,7 +52,7 @@ router.get("/:jobId/result", async (req, res) => {
       codePath: job.codePath,
     });
   } catch {
-    res.status(404).json({ error: "Job not found" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -53,14 +60,16 @@ router.get("/:jobId/result", async (req, res) => {
 router.get("/:jobId/code", async (req, res) => {
   try {
     const job = await getStoredJob(req.params.jobId);
-
-    if (!job.codePath || !fs.existsSync(job.codePath)) {
+    if (!job || !job.codePath)
       return res.status(404).json({ error: "Code not found" });
-    }
 
-    res.type("text/plain").send(fs.readFileSync(job.codePath, "utf-8"));
+    // proxy request to S3 (ideally the code should be served directly from S3 + CloundFront with proper CORS)
+    const response = await fetch(job.codePath);
+    const code = await response.text();
+
+    res.type("text/plain").send(code);
   } catch {
-    res.status(404).json({ error: "Job not found" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -68,25 +77,27 @@ router.get("/:jobId/code", async (req, res) => {
 router.get("/:jobId/video", async (req, res) => {
   try {
     const job = await getStoredJob(req.params.jobId);
-
-    if (!job.videoPath || !fs.existsSync(job.videoPath)) {
+    if (!job || !job.videoPath) {
       return res.status(404).json({ error: "Video not found" });
     }
 
-    res.sendFile(job.videoPath);
+    // redirect to S3 url
+    res.redirect(job.videoPath);
   } catch {
-    res.status(404).json({ error: "Job not found" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
+/* --- video download --- */
 router.get("/:jobId/video/download", async (req, res) => {
   try {
     const job = await getStoredJob(req.params.jobId);
-
-    if (!job.videoPath || !fs.existsSync(job.videoPath)) {
+    if (!job || !job.videoPath) {
       return res.status(404).json({ error: "Video not found" });
     }
-    res.download(job.videoPath);
+
+    // redirect download to S3 url
+    res.redirect(job.videoPath);
   } catch {
     res.status(404).json({ error: "Job not found" });
   }
@@ -95,23 +106,37 @@ router.get("/:jobId/video/download", async (req, res) => {
 /* --- re-render --- */
 router.post("/:jobId/rerender", async (req, res) => {
   try {
-    const job = await getStoredJob(req.params.jobId);
-    if (!job) return res.status(404).json({ error: "Job not found" });
+    const { jobId } = req.params;
+    const { code } = req.body;
 
-    if (!job.codePath || !fs.existsSync(job.codePath)) {
-      return res.status(404).json({ error: "Code not found" });
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ error: "Code is required" });
     }
 
-    const code = req.body.code ?? fs.readFileSync(job.codePath, "utf-8");
+    if (!validateManimCode(code)) {
+      return res.status(400).json({ error: "Invalid Manim code" });
+    }
 
-    // save edited code
-    fs.writeFileSync(job.codePath, code);
+    const job = await getStoredJob(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
 
-    const fileName = path.basename(job.codePath);
-    const sceneName = path.parse(fileName).name;
+    // temp dir
+    const jobDir = path.resolve(
+      process.cwd(),
+      "..",
+      "generated",
+      "jobs",
+      jobId,
+    );
+
+    fs.mkdirSync(jobDir, { recursive: true });
+
+    const { fileName, sceneName } = saveCodeToFile(code, jobDir);
 
     await pubClient.publish(
-      `job-progress:${job.jobId}`,
+      `job-progress:${jobId}`,
       JSON.stringify({
         status: "processing",
         stage: "Rendering edited code",
@@ -119,17 +144,31 @@ router.post("/:jobId/rerender", async (req, res) => {
       }),
     );
 
-    const videoPath = await runManim(fileName, sceneName, job.jobDir);
+    const localVideoPath = await runManim(fileName, sceneName, jobDir);
 
-    await updateStoredJob(job.jobId, {
+    // Upload to S3 (overwrite same keys)
+    const codeUrl = await uploadFilesToS3(
+      path.join(jobDir, "scenes", fileName),
+      `jobs/${jobId}/code.py`,
+      "text/x-python",
+    );
+
+    const videoUrl = await uploadFilesToS3(
+      localVideoPath,
+      `jobs/${jobId}/video.mp4`,
+      "video/mp4",
+    );
+
+    await updateStoredJob(jobId, {
       status: "completed",
       stage: "Finished",
       progress: 100,
-      videoPath,
+      codePath: codeUrl,
+      videoPath: videoUrl,
     });
 
     await pubClient.publish(
-      `job-progress:${job.jobId}`,
+      `job-progress:${jobId}`,
       JSON.stringify({
         status: "completed",
         stage: "Finished",
@@ -137,10 +176,21 @@ router.post("/:jobId/rerender", async (req, res) => {
       }),
     );
 
-    res.json({ ok: true, videoPath });
+    // temp dir cleanup
+    fs.rmSync(jobDir, { recursive: true, force: true });
+
+    res.json({
+      ok: true,
+      codePath: codeUrl,
+      videoPath: videoUrl,
+    });
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: "Re-render failed",
+      details: err.message,
+    });
   }
 });
 

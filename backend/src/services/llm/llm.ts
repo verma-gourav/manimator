@@ -4,7 +4,7 @@ import { validateManimCode } from "../../utils/validate.js";
 
 const client = new GoogleGenAI({});
 
-const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-flash"];
+const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
 const isQuotaError = (err: any) => {
   return (
