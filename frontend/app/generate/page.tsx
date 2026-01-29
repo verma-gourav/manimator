@@ -153,6 +153,17 @@ export default function GeneratePage() {
     setVideoUrl(`${API_BASE}/job/${jobId}/video?ts=${Date.now()}`);
   }, [jobState?.status, jobId]);
 
+  /* --- failed status --- */
+  useEffect(() => {
+    if (jobState?.status === "failed") {
+      setError("Job failed. Please try again.");
+      setMode("idle");
+      setJobId(null);
+      setCode(null);
+      setVideoUrl(null);
+    }
+  }, [jobState]);
+
   /* --- render --- */
   return (
     <main className="mx-20 my-4">
@@ -204,7 +215,7 @@ export default function GeneratePage() {
           </div>
 
           {/* Progress Overlay */}
-          {jobState && jobState.status !== "completed" && (
+          {jobState && jobState.status === "processing" && (
             <ProgressOverlay
               status={jobState.status}
               stage={jobState.stage}
