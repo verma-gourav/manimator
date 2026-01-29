@@ -12,7 +12,7 @@ RUN pnpm run build
 
 
 # ---- Runtime stage ----
-RUN node:20-bookworm-slim
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 ENV NODE_ENV=production
