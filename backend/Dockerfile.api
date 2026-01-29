@@ -1,0 +1,17 @@
+FROM node:20-bookworm-slim
+
+RUN corepack enable
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml* tsconfig.json ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY src ./src
+
+RUN pnpm run build
+
+EXPOSE 5000
+
+CMD ["node", "dist/index.js"]
