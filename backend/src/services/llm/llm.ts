@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import { fewShotExamples, systemPrompt } from "./prompts.js";
 import { validateManimCode } from "../../utils/validate.js";
 
-const client = new GoogleGenAI({});
+const client = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
 
 const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
