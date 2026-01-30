@@ -2,7 +2,6 @@ import express from "express";
 import http from "http";
 import generateRoute from "./api/routes/generate.js";
 import jobRoute from "./api/routes/job.js";
-import "dotenv/config";
 import cors from "cors";
 import { createWSServer } from "./api/ws/wsServer.js";
 

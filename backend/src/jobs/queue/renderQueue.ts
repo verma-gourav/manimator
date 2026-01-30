@@ -1,6 +1,5 @@
 import { Redis } from "ioredis";
 import { Queue } from "bullmq";
-import "dotenv/config";
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,

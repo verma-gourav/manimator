@@ -16,4 +16,4 @@ COPY src ./src
 
 RUN pnpm run build
 
-CMD ["node", "dist/job/worker/renderWorker.js"]
+CMD ["node", "dist/jobs/worker/renderWorker.js"]

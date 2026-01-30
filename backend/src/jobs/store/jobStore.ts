@@ -1,5 +1,4 @@
 import { Redis } from "ioredis";
-import "dotenv/config";
 
 export const jobStore = new Redis({
   host: process.env.REDIS_HOST,

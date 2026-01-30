@@ -1,5 +1,4 @@
 import { Redis } from "ioredis";
-import "dotenv/config";
 
 export const pubClient = new Redis({
   host: process.env.REDIS_HOST,

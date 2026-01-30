@@ -1,7 +1,6 @@
 import { Queue, Worker } from "bullmq";
 import { s3 } from "./s3Client.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import "dotenv/config";
 
 const connection = {
   host: process.env.REDIS_HOST,

@@ -14,6 +14,8 @@ RUN pnpm run build
 # ---- Runtime stage ----
 FROM node:20-bookworm-slim
 
+RUN corepack enable
+
 WORKDIR /app
 ENV NODE_ENV=production
 
