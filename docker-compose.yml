@@ -42,9 +42,10 @@ services:
       backend:
         condition: service_healthy
     volumes:
+      - render-data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
-      test: ["CMD", "ps", "aux"]
+      test: ["CMD-SHELL", 'node -e \"process.exit(0)\"']
       interval: 30s
       timeout: 5s
       retries: 3
@@ -63,3 +64,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+volumes:
+  render-data:
