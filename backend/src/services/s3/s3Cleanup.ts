@@ -1,11 +1,12 @@
 import { Queue, Worker } from "bullmq";
 import { s3 } from "./s3Client.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import "dotenv/config";
 
 const connection = {
-  host: process.env.REDIS_HOST || "localhost",
-  port: Number(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+  host: process.env.REDIS_HOST,
+  port: Number(process.env.REDIS_PORT),
+  password: process.env.REDIS_PASSWORD,
 };
 
 export const s3CleanupQueue = new Queue("s3CleanupQueue", { connection });
