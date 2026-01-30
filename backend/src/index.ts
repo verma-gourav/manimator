@@ -20,6 +20,9 @@ createWSServer(server);
 
 app.use("/api/v1/generate", generateRoute);
 app.use("/api/v1/job", jobRoute);
+app.get("/api/v1/health", (_req, res) => {
+  res.status(200).send("OK");
+});
 
 const PORT = process.env.PORT || 5000;
 
