@@ -82,6 +82,11 @@ const worker = new Worker(
     await report(jobId, 60, "processing", "Saving Code");
     const { fileName, sceneName } = saveCodeToFile(manimCode, jobDir);
 
+    const scenePath = path.join(jobDir, "scenes", fileName);
+    if (!fs.existsSync(scenePath)) {
+      throw new Error(`Scene file missing: ${scenePath}`);
+    }
+
     try {
       await report(jobId, 90, "processing", "Rendering video");
       const localVideoPath = await runManim(fileName, sceneName, jobDir);
