@@ -4,7 +4,7 @@ import { subClient } from "../../jobs/store/pubsub.js";
 const clients = new Map<string, Set<WebSocket>>();
 
 export const createWSServer = (server: any) => {
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ server, path: "/ws" });
 
   wss.on("connection", (ws, req) => {
     const jobId = new URL(req.url!, "http://localhost").searchParams.get(
