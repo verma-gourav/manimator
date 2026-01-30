@@ -13,13 +13,7 @@ router.post("/", async (req, res) => {
 
     const jobId = uuidv4(); // unique job id
 
-    const jobDir = path.resolve(
-      process.cwd(),
-      "..",
-      "generated",
-      "jobs",
-      jobId,
-    );
+    const jobDir = path.join("/data/jobs", jobId);
 
     const jobData = {
       jobId,
