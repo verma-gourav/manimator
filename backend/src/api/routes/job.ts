@@ -123,13 +123,7 @@ router.post("/:jobId/rerender", async (req, res) => {
     }
 
     // temp dir
-    const jobDir = path.resolve(
-      process.cwd(),
-      "..",
-      "generated",
-      "jobs",
-      jobId,
-    );
+    const jobDir = path.resolve("/data/jobs", jobId);
 
     fs.mkdirSync(jobDir, { recursive: true });
 
