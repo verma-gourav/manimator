@@ -42,7 +42,7 @@ services:
       backend:
         condition: service_healthy
     volumes:
-      - render-data:/data
+      - render-data:/data/jobs
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD-SHELL", 'node -e \"process.exit(0)\"']
