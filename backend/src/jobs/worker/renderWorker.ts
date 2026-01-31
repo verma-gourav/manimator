@@ -10,6 +10,7 @@ import { runManim } from "../../services/manim/manim.js";
 import path from "node:path";
 import { uploadFilesToS3 } from "../../services/s3/upload.js";
 import { s3CleanupQueue } from "../../services/s3/s3Cleanup.js";
+import { runJanitor } from "../../utils/cleanup.js";
 
 /* --- publish helper --- */
 const publish = async (jobId: string, payload: any) => {
@@ -135,10 +136,6 @@ const worker = new Worker(
         status: "completed",
         stage: "Finished",
       });
-
-      // local clean up after S3 upload
-      fs.rmSync(jobDir, { recursive: true, force: true });
-
       return true;
     } catch (err: any) {
       if (attempt < maxAttempts - 1) {
@@ -150,6 +147,11 @@ const worker = new Worker(
         );
       }
       throw err;
+    } finally {
+      if (fs.existsSync(jobDir)) {
+        console.log(`[worker] Cleaning up job directory: ${jobDir}`);
+        fs.rmSync(jobDir, { recursive: true, force: true });
+      }
     }
   },
   {
@@ -192,3 +194,17 @@ worker.on("failed", async (job, err) => {
 
   console.error(`[worker] Job ${job?.id} failed: ${err.message}`);
 });
+
+/* --- BACKGROUND MAINTENANCE --- */
+// start on boot
+console.log("[Worker] Disk Janitor initialized.");
+runJanitor(3600000);
+
+// run it every 30 minutes
+setInterval(
+  () => {
+    console.log("[Worker] Running scheduled disk cleanup...");
+    runJanitor(3600000); // 1hr threshold
+  },
+  30 * 60 * 1000,
+);
