@@ -46,11 +46,6 @@ services:
     volumes:
       - /data/jobs:/data/jobs
       - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: ["CMD-SHELL", 'node -e \"process.exit(0)\"']
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
   frontend:
     build:
