@@ -12,13 +12,17 @@ export const runManim = (
       "--cpus=2",
       "--memory=2g",
       "--network=none",
+      "-u",
+      "0:0",
       "-v",
       `${jobDir}:/manim`,
       "manimcommunity/manim:v0.19.1",
-      "bash",
-      "-c",
-      `ls -la /manim/scenes && manim scenes/${sceneFile}`,
+      "manim",
+      `/manim/scenes/${sceneFile}`,
+      sceneName,
       "-qm",
+      "--media_dir",
+      "/manim/media",
     ];
 
     const docker = spawn("docker", args);
