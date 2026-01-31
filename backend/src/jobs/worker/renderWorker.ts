@@ -53,7 +53,7 @@ const reportRetry = async (
 const worker = new Worker(
   renderQueue.name,
   async (job: Job<RenderJob>) => {
-    const { jobId, prompt, jobDir } = job.data;
+    const { jobId, prompt, jobDir, customCode } = job.data;
 
     const attempt = job.attemptsMade;
     const maxAttempts = job.opts.attempts ?? 1;
@@ -63,9 +63,14 @@ const worker = new Worker(
 
     let manimCode: string;
     try {
-      await report(jobId, 20, "processing", "Generating code");
-      manimCode = await generateManimCode(prompt);
-      await report(jobId, 40, "processing", "Code generated");
+      if (customCode) {
+        manimCode = customCode;
+        await report(jobId, 30, "processing", "Using edited code");
+      } else {
+        await report(jobId, 20, "processing", "Generating code");
+        manimCode = await generateManimCode(prompt);
+        await report(jobId, 40, "processing", "Code generated");
+      }
     } catch (err: any) {
       if (attempt < maxAttempts - 1) {
         await reportRetry(

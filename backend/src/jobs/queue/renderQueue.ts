@@ -12,6 +12,7 @@ export interface RenderJob {
   jobId: string;
   prompt: string;
   jobDir: string;
+  customCode?: string;
 }
 
 export const renderQueue = new Queue<RenderJob>("render-queue", {

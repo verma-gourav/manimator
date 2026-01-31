@@ -1,12 +1,9 @@
 import { Router } from "express";
 import { getStoredJob, updateStoredJob } from "../../jobs/store/jobHelpers.js";
 import fs from "fs";
-import { pubClient } from "../../jobs/store/pubsub.js";
-import { runManim } from "../../services/manim/manim.js";
 import path from "path";
-import { uploadFilesToS3 } from "../../services/s3/upload.js";
-import { saveCodeToFile } from "../../utils/saveCode.js";
 import { validateManimCode } from "../../utils/validate.js";
+import { renderQueue } from "../../jobs/queue/renderQueue.js";
 
 const router = Router();
 
@@ -122,62 +119,23 @@ router.post("/:jobId/rerender", async (req, res) => {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    // temp dir
     const jobDir = path.resolve("/data/jobs", jobId);
-
     fs.mkdirSync(jobDir, { recursive: true });
 
-    const { fileName, sceneName } = saveCodeToFile(code, jobDir);
-
-    await pubClient.publish(
-      `job-progress:${jobId}`,
-      JSON.stringify({
-        status: "processing",
-        stage: "Rendering edited code",
-        progress: 60,
-      }),
-    );
-
-    const localVideoPath = await runManim(fileName, sceneName, jobDir);
-
-    // Upload to S3 (overwrite same keys)
-    const codeUrl = await uploadFilesToS3(
-      path.join(jobDir, "scenes", fileName),
-      `jobs/${jobId}/code.py`,
-      "text/x-python",
-    );
-
-    const videoUrl = await uploadFilesToS3(
-      localVideoPath,
-      `jobs/${jobId}/video.mp4`,
-      "video/mp4",
-    );
-
     await updateStoredJob(jobId, {
-      status: "completed",
-      stage: "Finished",
-      progress: 100,
-      codePath: codeUrl,
-      videoPath: videoUrl,
+      status: "processing",
+      stage: "Queued for re-render",
+      progress: 10,
     });
 
-    await pubClient.publish(
-      `job-progress:${jobId}`,
-      JSON.stringify({
-        status: "completed",
-        stage: "Finished",
-        progress: 100,
-      }),
-    );
-
-    // temp dir cleanup
-    fs.rmSync(jobDir, { recursive: true, force: true });
-
-    res.json({
-      ok: true,
-      codePath: codeUrl,
-      videoPath: videoUrl,
+    await renderQueue.add(`rerender-${jobId}-${Date.now()}`, {
+      jobId,
+      prompt: "manual-edit",
+      jobDir,
+      customCode: code, // edited code
     });
+
+    res.json({ ok: true, status: "queued" });
   } catch (err: any) {
     console.error(err);
 
