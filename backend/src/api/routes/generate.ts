@@ -3,6 +3,7 @@ import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import { jobStore } from "../../jobs/store/jobStore.js";
 import { renderQueue } from "../../jobs/queue/renderQueue.js";
+import fs from "fs";
 
 const router = Router();
 
@@ -14,6 +15,8 @@ router.post("/", async (req, res) => {
     const jobId = uuidv4(); // unique job id
 
     const jobDir = path.resolve("/data/jobs", jobId);
+    console.log("Creating jobDir at:", jobDir);
+    fs.mkdirSync(jobDir, { recursive: true });
 
     const jobData = {
       jobId,

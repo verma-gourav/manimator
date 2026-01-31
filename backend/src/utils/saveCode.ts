@@ -17,5 +17,7 @@ export const saveCodeToFile = (code: string, jobDir: string) => {
 
   fs.writeFileSync(filePath, code, "utf-8");
 
+  console.log("Saved scene file:", filePath);
+
   return { fileName, sceneName };
 };

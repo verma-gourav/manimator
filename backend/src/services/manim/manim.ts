@@ -15,9 +15,9 @@ export const runManim = (
       "-v",
       `${jobDir}:/manim`,
       "manimcommunity/manim:v0.19.1",
-      "manim",
-      `scenes/${sceneFile}`,
-      sceneName,
+      "bash",
+      "-c",
+      `ls -la /manim/scenes && manim scenes/${sceneFile}`,
       "-qm",
     ];
 
