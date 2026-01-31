@@ -58,7 +58,9 @@ const worker = new Worker(
     const attempt = job.attemptsMade;
     const maxAttempts = job.opts.attempts ?? 1;
 
-    fs.mkdirSync(jobDir, { recursive: true });
+    const scenesDir = path.join(jobDir, "scenes");
+    fs.mkdirSync(scenesDir, { recursive: true });
+
     await report(jobId, 10, "processing", "Initializing job");
 
     let manimCode: string;
@@ -80,9 +82,9 @@ const worker = new Worker(
     }
 
     await report(jobId, 60, "processing", "Saving Code");
-    const { fileName, sceneName } = saveCodeToFile(manimCode, jobDir);
+    const { fileName, sceneName } = saveCodeToFile(manimCode, scenesDir);
 
-    const scenePath = path.join(jobDir, "scenes", fileName);
+    const scenePath = path.join(scenesDir, fileName);
     if (!fs.existsSync(scenePath)) {
       throw new Error(`Scene file missing: ${scenePath}`);
     }
@@ -91,7 +93,7 @@ const worker = new Worker(
       await report(jobId, 90, "processing", "Rendering video");
       const localVideoPath = await runManim(fileName, sceneName, jobDir);
 
-      const localCodePath = path.join(jobDir, "scenes", fileName);
+      const localCodePath = path.join(scenesDir, fileName);
 
       const codeUrl = await uploadFilesToS3(
         localCodePath,
