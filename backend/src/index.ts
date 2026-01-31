@@ -8,12 +8,14 @@ import { createWSServer } from "./api/ws/wsServer.js";
 const app = express();
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: `${process.env.FRONTEND_URL}`,
-    credentials: true,
-  }),
-);
+if (process.env.NODE_ENV !== "production") {
+  app.use(
+    cors({
+      origin: `${process.env.FRONTEND_URL}`,
+      credentials: true,
+    }),
+  );
+}
 
 const server = http.createServer(app);
 createWSServer(server);
