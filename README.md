@@ -63,6 +63,7 @@ Worker
 
 ## Job Lifecycle
 
+```bash
 queued
 ↓
 processing
@@ -72,6 +73,7 @@ processing
 └─ uploading to S3
 ↓
 completed | failed
+```
 
 Each stage updates:
 
