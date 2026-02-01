@@ -4,7 +4,7 @@ import Link from "next/link";
 export const TopBar = () => {
   return (
     <div className="flex items-center justify-between">
-      <Logo className="text-[5px] text-orange" />
+      <Logo className="text-[3px] sm:text-[4px] lg:text-[5px] text-orange" />
 
       <Link
         href="/"

@@ -4,10 +4,10 @@ import { IoLogoGithub } from "react-icons/io5";
 
 const HomePage = () => {
   return (
-    <main className="relative flex flex-col justify-between mx-20 my-4">
+    <main className="relative flex flex-col justify-between px-4 md:px-10 lg:px-20 my-4">
       {/* TopBar */}
       <div className="flex justify-between items-center mb-20">
-        <Logo className="text-[5px] text-orange" />
+        <Logo className="text-[3px] sm:text-[4px] lg:text-[5px] text-orange" />
 
         <Link
           href="https://github.com/verma-gourav/manimator"
@@ -24,16 +24,18 @@ const HomePage = () => {
 
       {/* Center Content */}
       <div className="flex flex-col items-center text-center text-white space-y-4 grow">
-        <h1 className="text-9xl font-extrabold">
+        <h1 className="text-4xl sm:text-6xl lg:text-9xl font-extrabold">
           Visualize <span className="text-orange">Math</span>
         </h1>
-        <p className="text-5xl text-white/80 font-bold">
+        <p className="text-xl sm:text-3xl lg:text-5xl text-white/80 font-bold">
           with cool animations.
         </p>
-        <p className="mt-6 text-5xl">Describe it. We animate it.</p>
+        <p className="mt-4 text-lg sm:text-3xl lg:text-5xl">
+          Describe it. We animate it.
+        </p>
 
         {/* Link Buttons */}
-        <div className="mt-10 flex justify-center gap-10">
+        <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 sm:gap-10">
           <Link
             href="https://github.com/verma-gourav/manimator"
             target="_blank"
@@ -61,7 +63,7 @@ const HomePage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="text-center text-sm text-white/60 font-mono mt-50">
+      <footer className="text-center text-xs sm:text-sm text-white/60 font-mono mt-20">
         Built on Manim. Powered by AI.
       </footer>
     </main>

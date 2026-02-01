@@ -10,7 +10,8 @@ export const CodePanel = ({
   return (
     <div
       className="
-        relative w-[48%] h-full rounded-2xl p-5
+        relative w-full lg:w-[48%] 
+        h-[40vh] lg:h-full rounded-2xl p-4 sm:p-5
         border border-white/20 bg-box/50 
       "
     >

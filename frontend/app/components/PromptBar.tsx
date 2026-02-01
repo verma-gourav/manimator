@@ -27,10 +27,10 @@ export const PromptBar = ({
   return (
     <div
       className="
-        w-3/4 max-w-3xl mx-auto
-        flex items-end gap-2 px-4 py-3
-        bg-box/50 backdrop-blur-lg rounded-3xl shadow-sm border border-white/20
-        max-sm:w-[80%] max-sm:rounded-xl smax-sm:px-3
+        w-[80%] sm:w-3/4 max-w-3xl mx-auto
+        flex items-end gap-2 px-3 py-3 sm:px-4
+        bg-box/50 backdrop-blur-lg rounded-3xl shadow-sm 
+        border border-white/20
       "
     >
       <textarea
@@ -39,7 +39,7 @@ export const PromptBar = ({
         className="
           flex-1 min-h-11 max-h-48 px-4 py-2
           outline-none resize-none overflow-hidden
-          text-xl text-orange placeholder:text-orange/50
+          sm:text-xl text-orange placeholder:text-orange/50
           max-sm:text-base max-sm:px-3
         "
         placeholder={placeholder}

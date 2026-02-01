@@ -7,6 +7,7 @@ import { TopBar } from "@/app/components/TopBar";
 import { CodePanel } from "@/app/components/CodePanel";
 import { VideoPanel } from "@/app/components/VideoPanel";
 import { ProgressOverlay } from "@/app/components/ProgressOverlay";
+import { FloatingPrompt } from "@/app/components/FloatingPrompt";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -166,11 +167,11 @@ export default function GeneratePage() {
 
   /* --- render --- */
   return (
-    <main className="mx-20 my-4">
+    <main className="px-4 md:px-10 lg:px-20 my-4">
       {/* --- IDLE VIEW --- */}
       {mode === "idle" && (
         <div className="flex flex-col items-center">
-          <Logo className="text-orange text-sm mt-35 mb-25" />
+          <Logo className="text-[5px] sm:text-[8px] lg:text-sm text-orange mt-35 mb-25" />
 
           <PromptBar
             prompt={draftPrompt}
@@ -205,7 +206,7 @@ export default function GeneratePage() {
             <TopBar />
           </div>
 
-          <div className="mt-12 h-[60vh] flex justify-between">
+          <div className="mt-10 flex flex-col lg:flex-row gap-6 lg:h-[60vh]">
             <CodePanel
               code={code}
               setCode={setCode}
@@ -215,16 +216,18 @@ export default function GeneratePage() {
           </div>
 
           {/* Progress Overlay */}
-          {jobState && jobState.status === "processing" && (
-            <ProgressOverlay
-              status={jobState.status}
-              stage={jobState.stage}
-              progress={jobState.progress}
-            />
-          )}
+          {jobState &&
+            (jobState.status === "queued" ||
+              jobState.status === "processing") && (
+              <ProgressOverlay
+                status={jobState.status}
+                stage={jobState.stage}
+                progress={jobState.progress}
+              />
+            )}
 
           <div className="mt-20">
-            <PromptBar
+            <FloatingPrompt
               prompt={draftPrompt}
               setPrompt={setDraftPrompt}
               onSubmit={handleSubmit}
