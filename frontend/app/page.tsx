@@ -7,7 +7,7 @@ const HomePage = () => {
     <main className="relative flex flex-col justify-between px-4 md:px-10 lg:px-20 my-4">
       {/* TopBar */}
       <div className="flex justify-between items-center mb-20">
-        <Logo className="text-[3px] sm:text-[4px] lg:text-[5px] text-orange" />
+        <Logo className="text-[0.45vw] sm:text-[0.525vw] lg:text-[5px] text-orange" />
 
         <Link
           href="https://github.com/verma-gourav/manimator"

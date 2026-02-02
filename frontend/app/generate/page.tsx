@@ -7,7 +7,6 @@ import { TopBar } from "@/app/components/TopBar";
 import { CodePanel } from "@/app/components/CodePanel";
 import { VideoPanel } from "@/app/components/VideoPanel";
 import { ProgressOverlay } from "@/app/components/ProgressOverlay";
-import { FloatingPrompt } from "@/app/components/FloatingPrompt";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -165,13 +164,26 @@ export default function GeneratePage() {
     }
   }, [jobState]);
 
+  /* --- prevents scrolling --- */
+  useEffect(() => {
+    if (jobState?.status === "queued" || jobState?.status === "processing") {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [jobState?.status]);
+
   /* --- render --- */
   return (
     <main className="px-4 md:px-10 lg:px-20 my-4">
       {/* --- IDLE VIEW --- */}
       {mode === "idle" && (
         <div className="flex flex-col items-center">
-          <Logo className="text-[5px] sm:text-[8px] lg:text-sm text-orange mt-35 mb-25" />
+          <Logo className="text-[0.8vw] sm:text-[0.96vw] lg:text-sm text-orange mt-35 mb-25" />
 
           <PromptBar
             prompt={draftPrompt}
@@ -227,7 +239,7 @@ export default function GeneratePage() {
             )}
 
           <div className="mt-20">
-            <FloatingPrompt
+            <PromptBar
               prompt={draftPrompt}
               setPrompt={setDraftPrompt}
               onSubmit={handleSubmit}
