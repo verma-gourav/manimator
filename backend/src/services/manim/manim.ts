@@ -9,7 +9,7 @@ export const runManim = (
     const args = [
       "run",
       "--rm",
-      "--cpus=2",
+      "--cpus=1.5",
       "--memory=2g",
       "--network=none",
       "-u",
@@ -20,7 +20,7 @@ export const runManim = (
       "manim",
       `/manim/scenes/${sceneFile}`,
       sceneName,
-      "-qm",
+      "-ql",
       "--media_dir",
       "/manim/media",
     ];
@@ -33,7 +33,7 @@ export const runManim = (
 
     docker.on("close", (code) => {
       if (code == 0) {
-        resolve(`${jobDir}/media/videos/${sceneName}/720p30/${sceneName}.mp4`);
+        resolve(`${jobDir}/media/videos/${sceneName}/480p15/${sceneName}.mp4`);
       } else {
         reject(new Error(`Manim failed with code ${code}`));
       }
