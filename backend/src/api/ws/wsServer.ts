@@ -1,9 +1,10 @@
+import { Server } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
 import { subClient } from "../../jobs/store/pubsub.js";
 
 const clients = new Map<string, Set<WebSocket>>();
 
-export const createWSServer = (server: any) => {
+export const createWSServer = (server: Server) => {
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", (ws, req) => {
@@ -19,8 +20,21 @@ export const createWSServer = (server: any) => {
 
     clients.get(jobId)!.add(ws);
 
-    ws.on("close", () => {
-      clients.get(jobId)!.delete(ws);
+    const cleanup = () => {
+      const room = clients.get(jobId);
+      if (room) {
+        room.delete(ws);
+
+        if (room.size === 0) {
+          clients.delete(jobId);
+        }
+      }
+    };
+
+    ws.on("close", cleanup);
+    ws.on("error", (err) => {
+      console.error(`WS Error for job ${jobId}:`, err);
+      cleanup();
     });
   });
 };
