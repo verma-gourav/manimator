@@ -40,7 +40,7 @@ export default function GeneratePage() {
   const EXAMPLE_PROMPTS = [
     "Create a sine wave animation",
     "Visualize Pythagoras theorem",
-    "Animate a rotating cube with axes",
+    "Animate projectile motion in 2D",
     "Show Fourier series approximation",
   ];
 
