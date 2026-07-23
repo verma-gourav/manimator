@@ -6,6 +6,12 @@ Users describe a math concept → AI generates Manim code → backend renders it
 
 ---
 
+## DEMO
+
+![Quick Preview](./manimator.gif)
+
+---
+
 ## Features
 
 - AI-generated Manim code (Google Gemini)
